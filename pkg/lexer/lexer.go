@@ -30,8 +30,37 @@ func newToken(t token.TokenType, ch byte) token.Token {
 	return token.Token{Type: t, Literal: string(ch)}
 }
 
+func isLetter(char byte) bool {
+	return 'a' <= char && char <= 'z' ||
+		'A' <= char && char <= 'Z' ||
+		char == '_'
+}
+
+func isWhitespace(char byte) bool {
+	return char == ' ' ||
+		char == '\t' ||
+		char == '\n' ||
+		char == '\r'
+}
+
+func (l *Lexer) readIdentifier() string {
+	startPos := l.currPos
+	for isLetter(l.currChar) {
+		l.readChar()
+	}
+	return l.input[startPos:l.currPos]
+}
+
+func (l *Lexer) consumeWhitespace() {
+	for isWhitespace(l.currChar) {
+		l.readChar()
+	}
+}
+
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
+
+	l.consumeWhitespace()
 
 	switch l.currChar {
 	case '=':
@@ -52,6 +81,15 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.RBRACE, l.currChar)
 	case 0:
 		tok = newToken(token.EOF, 0)
+
+	default:
+		if isLetter(l.currChar) {
+			tok.Literal = l.readIdentifier()
+			tok.Type = token.LookupIdent(tok.Literal)
+			return tok // don't advance the lexer! readIdentifier stops at first non-alphanum char
+		} else {
+			tok = newToken(token.ILLEGAL, l.currChar)
+		}
 	}
 
 	l.readChar()
