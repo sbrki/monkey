@@ -36,6 +36,10 @@ func isLetter(char byte) bool {
 		char == '_'
 }
 
+func isDigit(char byte) bool {
+	return '0' <= char && char <= '9'
+}
+
 func isWhitespace(char byte) bool {
 	return char == ' ' ||
 		char == '\t' ||
@@ -46,6 +50,14 @@ func isWhitespace(char byte) bool {
 func (l *Lexer) readIdentifier() string {
 	startPos := l.currPos
 	for isLetter(l.currChar) {
+		l.readChar()
+	}
+	return l.input[startPos:l.currPos]
+}
+
+func (l *Lexer) readNumber() string {
+	startPos := l.currPos
+	for isDigit(l.currChar) {
 		l.readChar()
 	}
 	return l.input[startPos:l.currPos]
@@ -65,16 +77,28 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.currChar {
 	case '=':
 		tok = newToken(token.ASSIGN, l.currChar)
+	case '+':
+		tok = newToken(token.PLUS, l.currChar)
+	case '-':
+		tok = newToken(token.MINUS, l.currChar)
+	case '!':
+		tok = newToken(token.BANG, l.currChar)
+	case '*':
+		tok = newToken(token.ASTERISK, l.currChar)
+	case '/':
+		tok = newToken(token.SLASH, l.currChar)
+	case '<':
+		tok = newToken(token.LT, l.currChar)
+	case '>':
+		tok = newToken(token.GT, l.currChar)
+	case ',':
+		tok = newToken(token.COMMA, l.currChar)
 	case ';':
 		tok = newToken(token.SEMICOLON, l.currChar)
 	case '(':
 		tok = newToken(token.LPAREN, l.currChar)
 	case ')':
 		tok = newToken(token.RPAREN, l.currChar)
-	case ',':
-		tok = newToken(token.COMMA, l.currChar)
-	case '+':
-		tok = newToken(token.PLUS, l.currChar)
 	case '{':
 		tok = newToken(token.LBRACE, l.currChar)
 	case '}':
@@ -86,7 +110,11 @@ func (l *Lexer) NextToken() token.Token {
 		if isLetter(l.currChar) {
 			tok.Literal = l.readIdentifier()
 			tok.Type = token.LookupIdent(tok.Literal)
-			return tok // don't advance the lexer! readIdentifier stops at first non-alphanum char
+			return tok // don't advance the lexer! readIdentifier stops at first non-letter char
+		} else if isDigit(l.currChar) {
+			tok.Literal = l.readNumber()
+			tok.Type = token.INT
+			return tok // don't advance the lexer! readNumber stops at first non-num char
 		} else {
 			tok = newToken(token.ILLEGAL, l.currChar)
 		}
