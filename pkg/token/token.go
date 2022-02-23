@@ -13,9 +13,11 @@ const (
 
 	// Operators
 	ASSIGN   = "="
+	EQ       = "=="
 	PLUS     = "+"
 	MINUS    = "-"
 	BANG     = "!"
+	NOT_EQ   = "!="
 	ASTERISK = "*"
 	SLASH    = "/"
 
@@ -47,12 +49,12 @@ type Token struct {
 }
 
 var keywords = map[string]TokenType{
-	"fn":  FUNCTION,
-	"let": LET,
-	"true": TRUE,
-	"false": FALSE,
-	"if": IF,
-	"else": ELSE,
+	"fn":     FUNCTION,
+	"let":    LET,
+	"true":   TRUE,
+	"false":  FALSE,
+	"if":     IF,
+	"else":   ELSE,
 	"return": RETURN,
 }
 
