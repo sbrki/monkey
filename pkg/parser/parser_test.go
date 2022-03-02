@@ -17,6 +17,7 @@ func TestLetStatements(t *testing.T) {
 	p := New(l)
 
 	program := p.ParseProgram()
+	checkParserErrors(t, p)
 
 	if program == nil {
 		t.Fatalf("ParseProgram() returned nil")
@@ -61,4 +62,48 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 			letStmt.Name.TokenLiteral(), name)
 	}
 	return true
+}
+
+func TestReturnStatements(t *testing.T) {
+	input := `return 5;
+	return 10;
+	return 42;
+	`
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 3 {
+		t.Fatalf("len(program.Statements) = %d, expected = 3",
+			len(program.Statements))
+	}
+
+	for _, stmt := range program.Statements {
+		returnStmt, ok := stmt.(*ast.ReturnStatement)
+		if !ok {
+			t.Errorf("Could not downcast ast.Statement to ast.ReturnStatement. got = %q", stmt)
+			continue
+		}
+
+		if returnStmt.TokenLiteral() != "return" {
+			t.Errorf("returnStmt.TokenLiteral() = '%q', expected = 'return'",
+				returnStmt.TokenLiteral())
+		}
+	}
+
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser encountered %d errors:", len(errors))
+	for idx, e := range errors {
+		t.Errorf("\t%d: %s", idx, e)
+	}
+	t.FailNow()
 }
