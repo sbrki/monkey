@@ -124,7 +124,7 @@ func (p *Parser) peekError(expectedType token.TokenType) {
 	p.errors = append(
 		p.errors,
 		fmt.Sprintf(
-			"expected token =  '%s' , got = '%s'",
+			"expected token = '%s' , got = '%s'",
 			expectedType,
 			p.peekToken.Type,
 		),
