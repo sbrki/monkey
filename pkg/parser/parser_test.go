@@ -95,6 +95,39 @@ func TestReturnStatements(t *testing.T) {
 
 }
 
+func TestIdentifierExpression(t *testing.T) {
+	input := "foobar"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("len(program.Statements) = %d, expected = 1",
+			len(program.Statements))
+	}
+
+	exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+	}
+
+	ident, ok := exprStmt.Expression.(*ast.Identifier)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Expression to ast.Identifier. got = %q", exprStmt.Expression)
+	}
+
+	if ident.Value != "foobar" {
+		t.Errorf("ident.Value = '%q', expected = 'foobar'", ident.Value)
+	}
+
+	if ident.TokenLiteral() != "foobar" {
+		t.Errorf("ident.TokenLiteral() = '%q', exptected = 'foobar'", ident.TokenLiteral())
+	}
+
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {
