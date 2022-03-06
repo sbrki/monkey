@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/sbrki/monkey/pkg/ast"
@@ -159,6 +160,68 @@ func TestIntegerLiteralExpression(t *testing.T) {
 		t.Errorf("intLit.TokenLiteral() = '%s', exptected = '5'", intLit.TokenLiteral())
 	}
 
+}
+
+func TestPrefixExpression(t *testing.T) {
+	prefixTests := []struct {
+		input        string
+		operator     string
+		integerValue int64
+	}{
+		{"!5;", "!", 5},
+		{"-15;", "-", 15},
+	}
+
+	for _, tt := range prefixTests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("len(program.Statements) = %d, expected = 1",
+				len(program.Statements))
+		}
+
+		exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+		}
+
+		prefixExp, ok := exprStmt.Expression.(*ast.PrefixExpression)
+		if !ok {
+			t.Fatalf("Could not downcast ast.Expression to ast.PrefixExpression. got = %q", exprStmt.Expression)
+		}
+
+		if prefixExp.Operator != tt.operator {
+			t.Fatalf("exp.Operator is not '%s'. got = '%s'", tt.operator, prefixExp.Operator)
+		}
+
+		if !testIntegerLiteral(t, prefixExp.Right, tt.integerValue) {
+			return
+		}
+
+	}
+}
+
+func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
+	intLit, ok := il.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("Could not downcast ast.Expression to ast.IntegerLiteral. got = %q", il)
+		return false
+	}
+
+	if intLit.Value != value {
+		t.Errorf("intLit.Value = %d, expected = 5", intLit.Value)
+		return false
+	}
+
+	if intLit.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("intLit.TokenLiteral() = '%s', exptected = '%s'", intLit.TokenLiteral(), fmt.Sprintf("%d", value))
+		return false
+	}
+
+	return true
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {
