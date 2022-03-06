@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/sbrki/monkey/pkg/ast"
 	"github.com/sbrki/monkey/pkg/lexer"
@@ -43,6 +44,7 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 
 	// read two tokens, so that currToken and peekToken are set
 	p.nextToken()
@@ -167,6 +169,21 @@ func (p *Parser) parseIdentifier() ast.Expression {
 		Token: p.currToken,
 		Value: p.currToken.Literal,
 	}
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	intLit := &ast.IntegerLiteral{
+		Token: p.currToken,
+	}
+
+	value, err := strconv.ParseInt(p.currToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse integer literal '%s'", p.currToken.Literal)
+		p.errors = append(p.errors, msg)
+	}
+
+	intLit.Value = value
+	return intLit
 }
 
 //////////////////////////////

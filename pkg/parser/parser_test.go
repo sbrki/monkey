@@ -128,6 +128,39 @@ func TestIdentifierExpression(t *testing.T) {
 
 }
 
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "5;"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("len(program.Statements) = %d, expected = 1",
+			len(program.Statements))
+	}
+
+	exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+	}
+
+	intLit, ok := exprStmt.Expression.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Expression to ast.IntegerLiteral. got = %q", exprStmt.Expression)
+	}
+
+	if intLit.Value != 5 {
+		t.Errorf("intLit.Value = %d, expected = 5", intLit.Value)
+	}
+
+	if intLit.TokenLiteral() != "5" {
+		t.Errorf("intLit.TokenLiteral() = '%s', exptected = '5'", intLit.TokenLiteral())
+	}
+
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {
