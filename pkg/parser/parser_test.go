@@ -212,7 +212,7 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	}
 
 	if intLit.Value != value {
-		t.Errorf("intLit.Value = %d, expected = 5", intLit.Value)
+		t.Errorf("intLit.Value = %d, expected = %d", intLit.Value, value)
 		return false
 	}
 
@@ -221,6 +221,62 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 		return false
 	}
 
+	return true
+}
+
+func testIdentifier(t *testing.T, expr ast.Expression, value string) bool {
+	ident, ok := expr.(*ast.Identifier)
+	if !ok {
+		t.Errorf("Could not downcast ast.Expression to ast.Identifier. got = %q", expr)
+		return false
+	}
+
+	if ident.Value != value {
+		t.Errorf("ident.Value = '%q', expected = '%q'", ident.Value, value)
+		return false
+	}
+
+	if ident.TokenLiteral() != value {
+		t.Errorf("ident.TokenLiteral() = '%s', expected = '%s'", ident.TokenLiteral(), value)
+		return false
+	}
+
+	return true
+}
+
+func testLiteralExpression(t *testing.T, expr ast.Expression, expected interface{}) bool {
+	switch v := expected.(type) {
+	case int:
+		return testIntegerLiteral(t, expr, int64(v))
+	case int64:
+		return testIntegerLiteral(t, expr, v)
+	case string:
+		return testIdentifier(t, expr, v)
+	}
+
+	t.Errorf("type of expr not handled. got = %T", expr)
+	return false
+}
+
+func testInfixExpression(t *testing.T, expr ast.Expression, left interface{}, operator string, right interface{}) bool {
+	opExpr, ok := expr.(*ast.InfixExpression)
+	if !ok {
+		t.Errorf("Could not downcast ast.Expression to ast.InfixExpression. got = %q", expr)
+	}
+
+	if !testLiteralExpression(t, opExpr.Left, left) {
+		return false
+	}
+
+	if opExpr.Operator != operator {
+		t.Errorf("opExpr.Operator = '%s'. expected = '%s'", opExpr.Operator, operator)
+		return false
+	}
+
+
+	if !testLiteralExpression(t, opExpr.Right, right) {
+		return false
+	}
 	return true
 }
 
@@ -258,22 +314,24 @@ func TestInfixExpression(t *testing.T) {
 			t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
 		}
 
-		infixExpr, ok := exprStmt.Expression.(*ast.InfixExpression)
-		if !ok {
-			t.Fatalf("Could not downcast ast.Expression to ast.InfixExpression. got = %q", exprStmt.Expression)
-		}
+		testInfixExpression(t, exprStmt.Expression, tt.leftValue, tt.operator, tt.rightValue)
 
-		if !testIntegerLiteral(t, infixExpr.Left, tt.leftValue) {
-			return
-		}
+		//infixExpr, ok := exprStmt.Expression.(*ast.InfixExpression)
+		//if !ok {
+		//t.Fatalf("Could not downcast ast.Expression to ast.InfixExpression. got = %q", exprStmt.Expression)
+		//}
 
-		if infixExpr.Operator != tt.operator {
-			t.Fatalf("infixExpr.Operator is not '%s'. got = '%s'", tt.operator, infixExpr.Operator)
-		}
+		//if !testIntegerLiteral(t, infixExpr.Left, tt.leftValue) {
+		//return
+		//}
 
-		if !testIntegerLiteral(t, infixExpr.Right, tt.rightValue) {
-			return
-		}
+		//if infixExpr.Operator != tt.operator {
+		//t.Fatalf("infixExpr.Operator is not '%s'. got = '%s'", tt.operator, infixExpr.Operator)
+		//}
+
+		//if !testIntegerLiteral(t, infixExpr.Right, tt.rightValue) {
+		//return
+		//}
 	}
 }
 
