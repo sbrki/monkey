@@ -149,8 +149,8 @@ type InfixExpression struct {
 	Right    Expression
 }
 
-func (ie *InfixExpression) isExpressionNode() {}
-func (ie *InfixExpression) TokenLiteral() string {return ie.Token.Literal}
+func (ie *InfixExpression) isExpressionNode()    {}
+func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
 func (ie *InfixExpression) String() string {
 	var out bytes.Buffer
 
@@ -162,3 +162,12 @@ func (ie *InfixExpression) String() string {
 
 	return out.String()
 }
+
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (b *Boolean) isExpressionNode()    {}
+func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
+func (b *Boolean) String() string       { return b.Token.Literal }

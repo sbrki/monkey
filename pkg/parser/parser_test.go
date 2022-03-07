@@ -273,7 +273,6 @@ func testInfixExpression(t *testing.T, expr ast.Expression, left interface{}, op
 		return false
 	}
 
-
 	if !testLiteralExpression(t, opExpr.Right, right) {
 		return false
 	}
@@ -392,6 +391,22 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"3 + 4 * 5 == 3 * 1 + 4 * 5",
 			"((3+(4*5))==((3*1)+(4*5)))",
 		},
+		{
+			"true",
+			"true",
+		},
+		{
+			"false",
+			"false",
+		},
+		{
+			"3 > 5 == false",
+			"((3>5)==false)",
+		},
+		{
+			"3 < 5 == true",
+			"((3<5)==true)",
+		},
 	}
 
 	for _, tt := range tests {
@@ -404,6 +419,43 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		if actual != tt.expected {
 			t.Errorf("expected='%q', got='%q'", tt.expected, actual)
 		}
+	}
+}
+
+func TestBooleanExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"true;", true},
+		{"false;", false},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("len(program.Statements) = %d, expected = 1",
+				len(program.Statements))
+		}
+
+		exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+		}
+
+		boolean, ok := exprStmt.Expression.(*ast.Boolean)
+		if !ok {
+			t.Fatalf("Could not downcast ast.Expression to ast.Boolean. got = %q", exprStmt.Expression)
+		}
+
+		if boolean.Value != tt.expected {
+			t.Fatalf("boolean.Value is not '%t'. got = '%t'", tt.expected, boolean.Value)
+		}
+
 	}
 }
 
