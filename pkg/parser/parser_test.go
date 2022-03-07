@@ -244,6 +244,26 @@ func testIdentifier(t *testing.T, expr ast.Expression, value string) bool {
 	return true
 }
 
+func testBooleanLiteral(t *testing.T, expr ast.Expression, value bool) bool {
+	boolean, ok := expr.(*ast.Boolean)
+	if !ok {
+		t.Errorf("Could not downcast ast.Expression to ast.Boolean. got = %q", expr)
+		return false
+	}
+
+	if boolean.Value != value {
+		t.Errorf("boolean.Value = '%t', expected = '%t'", boolean.Value, value)
+		return false
+	}
+
+	if boolean.TokenLiteral() != fmt.Sprintf("%t", value) {
+		t.Errorf("boolean.TokenLiteral() = '%s', expected = '%s'", boolean.TokenLiteral(), fmt.Sprintf("%t", value))
+		return false
+	}
+
+	return true
+}
+
 func testLiteralExpression(t *testing.T, expr ast.Expression, expected interface{}) bool {
 	switch v := expected.(type) {
 	case int:
@@ -252,6 +272,8 @@ func testLiteralExpression(t *testing.T, expr ast.Expression, expected interface
 		return testIntegerLiteral(t, expr, v)
 	case string:
 		return testIdentifier(t, expr, v)
+	case bool:
+		return testBooleanLiteral(t, expr, v)
 	}
 
 	t.Errorf("type of expr not handled. got = %T", expr)
@@ -283,9 +305,9 @@ func TestInfixExpression(t *testing.T) {
 	// for now, tailored for int literals as left and right expressions.
 	infixTests := []struct {
 		input      string
-		leftValue  int64
+		leftValue  interface{}
 		operator   string
-		rightValue int64
+		rightValue interface{}
 	}{
 		{"5 + 5;", 5, "+", 5},
 		{"5 - 5;", 5, "-", 5},
@@ -295,6 +317,9 @@ func TestInfixExpression(t *testing.T) {
 		{"5 < 5;", 5, "<", 5},
 		{"5 == 5;", 5, "==", 5},
 		{"5 != 5;", 5, "!=", 5},
+		{"true == true", true, "==", true},
+		{"true != false", true, "!=", false},
+		{"false == false", false, "==", false},
 	}
 
 	for _, tt := range infixTests {
