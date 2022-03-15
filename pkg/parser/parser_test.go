@@ -454,6 +454,18 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"!(true == true)",
 			"(!(true==true))",
 		},
+		{
+			"a + add(b * c) + d",
+			"((a+add((b*c)))+d)",
+		},
+		{
+			"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+			"add(a,b,1,(2*3),(4+5),add(6,(7*8)))",
+		},
+		{
+			"add(a + b + c * d / f + g)",
+			"add((((a+b)+((c*d)/f))+g))",
+		},
 	}
 
 	for _, tt := range tests {
@@ -655,7 +667,43 @@ func TestFunctionLiteralParsing(t *testing.T) {
 		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement, got = %q", functionLiteral.Body.Statements[0])
 	}
 	testInfixExpression(t, bodyStmt.Expression, "x", "+", "y")
+}
 
+func TestCallExpressionParsing(t *testing.T) {
+	input := `add(1, 2 * 3, 4 + 5, foo)`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("len(program.Statements) = %d, expected = 1",
+			len(program.Statements))
+	}
+
+	exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+	}
+
+	callExpr, ok := exprStmt.Expression.(*ast.CallExpression)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Expression to ast.CallExpression. got = %q", exprStmt.Expression)
+	}
+
+	if !testIdentifier(t, callExpr.Function, "add") {
+		return
+	}
+
+	if len(callExpr.Arguments) != 4 {
+		t.Fatalf("len(callExpr.Arguments) = %d, want = 4", len(callExpr.Arguments))
+	}
+
+	testLiteralExpression(t, callExpr.Arguments[0], 1)
+	testInfixExpression(t, callExpr.Arguments[1], 2, "*", 3)
+	testInfixExpression(t, callExpr.Arguments[2], 4, "+", 5)
+	testLiteralExpression(t, callExpr.Arguments[3], "foo")
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {
