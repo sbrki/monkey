@@ -616,6 +616,48 @@ func TestIfExpressionWithAlternative(t *testing.T) {
 	}
 }
 
+func TestFunctionLiteralParsing(t *testing.T) {
+	input := `fn(x,y) { x + y; }`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("len(program.Statements) = %d, expected = 1",
+			len(program.Statements))
+	}
+
+	exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+	}
+
+	functionLiteral, ok := exprStmt.Expression.(*ast.FunctionLiteral)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Expression to ast.FunctionLiteral. got = %q", exprStmt.Expression)
+	}
+
+	if len(functionLiteral.Parameters) != 2 {
+		t.Fatalf("len(functionLiteral.Parameters) = %d, want = 2", len(functionLiteral.Parameters))
+	}
+
+	testLiteralExpression(t, functionLiteral.Parameters[0], "x")
+	testLiteralExpression(t, functionLiteral.Parameters[1], "y")
+
+	if len(functionLiteral.Body.Statements) != 1 {
+		t.Fatalf("len(functionLiteral.Body.Statements = %d, want = 1", len(functionLiteral.Body.Statements))
+	}
+
+	bodyStmt, ok := functionLiteral.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement, got = %q", functionLiteral.Body.Statements[0])
+	}
+	testInfixExpression(t, bodyStmt.Expression, "x", "+", "y")
+
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {
