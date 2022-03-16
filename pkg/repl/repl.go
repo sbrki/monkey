@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/sbrki/monkey/pkg/lexer"
-	"github.com/sbrki/monkey/pkg/token"
+	"github.com/sbrki/monkey/pkg/parser"
 )
 
 const (
@@ -22,9 +22,23 @@ func Start(in io.Reader, out io.Writer) {
 		}
 		line := scanner.Text()
 		l := lexer.New(line)
+		p := parser.New(l)
 
-		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-			fmt.Fprintf(out, "%+v\n", tok)
+		program := p.ParseProgram()
+
+		if len(p.Errors()) != 0 {
+			printParserErrors(out, p.Errors())
+			continue
 		}
+
+		io.WriteString(out, program.String())
+		io.WriteString(out, "\n")
+	}
+}
+
+func printParserErrors(out io.Writer, errors []string) {
+	io.WriteString(out, "Whoops! We ran into some monkey business when parsing the input!\n")
+	for idx, msg := range errors {
+		io.WriteString(out, fmt.Sprintf("[%d]\t%s\n", idx+1, msg))
 	}
 }
