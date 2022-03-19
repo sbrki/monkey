@@ -7,6 +7,7 @@ import (
 
 	"github.com/sbrki/monkey/pkg/evaluator"
 	"github.com/sbrki/monkey/pkg/lexer"
+	"github.com/sbrki/monkey/pkg/object"
 	"github.com/sbrki/monkey/pkg/parser"
 )
 
@@ -16,6 +17,7 @@ const (
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	env := object.NewEnvironment()
 	for {
 		fmt.Fprint(out, PROMPT)
 		if !scanner.Scan() {
@@ -32,7 +34,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, env)
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
