@@ -69,10 +69,6 @@ func evalProgram(program *ast.Program, env *object.Environment) object.Object {
 	for _, statement := range program.Statements {
 		result = Eval(statement, env)
 
-		//if returnValue, ok := result.(*object.ReturnValue); ok {
-		//return returnValue.Value
-		//}
-
 		switch result := result.(type) {
 		case *object.ReturnValue:
 			return result.Value
