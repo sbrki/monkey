@@ -251,6 +251,30 @@ func TestLetStatements(t *testing.T) {
 	}
 }
 
+func TestFunctionObject(t *testing.T) {
+	input := "fn(x) {x + 2;};"
+	evaluated := testEval(input)
+	fn, ok := evaluated.(*object.Function)
+
+	if !ok {
+		t.Fatalf("could not downcast object.Object to object.Function, got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if len(fn.Parameters) != 1 {
+		t.Fatalf("function has wrong number of parameters, got=%d, want=1", len(fn.Parameters))
+	}
+
+	if fn.Parameters[0].String() != "x" {
+		t.Fatalf("fn.Parameters[0] = %s, want='x'", fn.Parameters[0].String())
+	}
+
+	expectedBody := "(x+2)"
+
+	if fn.Body.String() != expectedBody {
+		t.Fatalf("body = %s, want=%s", fn.Body.String(), expectedBody)
+	}
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
