@@ -167,7 +167,38 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	if intLit.TokenLiteral() != "5" {
 		t.Errorf("intLit.TokenLiteral() = '%s', exptected = '5'", intLit.TokenLiteral())
 	}
+}
 
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"foo bar"`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("len(program.Statements) = %d, expected = 1",
+			len(program.Statements))
+	}
+
+	exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+	}
+
+	strLit, ok := exprStmt.Expression.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Expression to ast.StringLiteral. got = %q", exprStmt.Expression)
+	}
+
+	if strLit.Value != "foo bar" {
+		t.Errorf("strLit.Value = %s, expected = \"foo bar\"", strLit.Value)
+	}
+
+	if strLit.TokenLiteral() != "foo bar" {
+		t.Errorf("strLit.TokenLiteral() = '%s', exptected = \"foo bar\"", strLit.TokenLiteral())
+	}
 }
 
 func TestPrefixExpression(t *testing.T) {
