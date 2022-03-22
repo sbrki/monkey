@@ -70,6 +70,17 @@ func (l *Lexer) readNumber() string {
 	return l.input[startPos:l.currPos]
 }
 
+func (l *Lexer) readString() string {
+	//TODO(sbrki): support for basic escape sequences:
+	// \t, \n, \', \", \\ 
+	l.readChar()
+	startPos := l.currPos
+	for l.currChar != '"' && l.currChar != 0 {
+		l.readChar()
+	}
+	return l.input[startPos:l.currPos]
+}
+
 func (l *Lexer) consumeWhitespace() {
 	for isWhitespace(l.currChar) {
 		l.readChar()
@@ -124,6 +135,9 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LBRACE, l.currChar)
 	case '}':
 		tok = newToken(token.RBRACE, l.currChar)
+	case '"':
+		tok.Type = token.STRING
+		tok.Literal = l.readString()
 	case 0:
 		tok = newToken(token.EOF, 0)
 
