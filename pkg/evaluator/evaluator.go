@@ -176,6 +176,8 @@ func evalInfixExpression(
 		return evalIntegerInfixExpression(operator, left, right)
 	case left.Type() == object.BOOLEAN_OBJ && right.Type() == object.BOOLEAN_OBJ:
 		return evalBooleanInfixExpression(operator, left, right)
+	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
+		return evalStringInfixExpression(operator, left, right)
 	case left.Type() != right.Type():
 		return newError("type mismatch: %s %s %s", left.Type(), operator, right.Type())
 	default:
@@ -212,8 +214,8 @@ func evalIntegerInfixExpression(
 	default:
 		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
-
 }
+
 func evalBooleanInfixExpression(
 	operator string,
 	left, right object.Object,
@@ -228,6 +230,20 @@ func evalBooleanInfixExpression(
 		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 
+}
+
+func evalStringInfixExpression(
+	operator string,
+	left, right object.Object,
+) object.Object {
+	switch operator {
+	case "+":
+		return &object.String{
+			Value: left.(*object.String).Value + right.(*object.String).Value,
+		}
+	default:
+		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
+	}
 }
 
 func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Object {

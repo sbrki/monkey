@@ -53,12 +53,26 @@ func TestStringLiteral(t *testing.T) {
 	input := `"Hello, world!"`
 
 	evaluated := testEval(input)
-	str,ok := evaluated.(*object.String)
-	if !ok{
+	str, ok := evaluated.(*object.String)
+	if !ok {
 		t.Fatalf("Could not downcast object.Object to object.String, got=%T (%+v)", evaluated, evaluated)
 	}
 
 	if str.Value != "Hello, world!" {
+		t.Errorf("String has wrong value, got=%q", str.Value)
+	}
+}
+
+func TestStringConcatenation(t *testing.T) {
+	input := `"Hello" + " " + "World!"`
+
+	evaluated := testEval(input)
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Fatalf("Could not downcast object.Object to object.String, got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if str.Value != "Hello World!" {
 		t.Errorf("String has wrong value, got=%q", str.Value)
 	}
 }
@@ -232,6 +246,10 @@ func TestErrorHandling(t *testing.T) {
 		{
 			"foobar",
 			"identifier not found: foobar",
+		},
+		{
+			`"Hello" - "World!"`,
+			"unknown operator: STRING - STRING",
 		},
 	}
 
