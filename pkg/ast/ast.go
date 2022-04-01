@@ -129,11 +129,9 @@ type StringLiteral struct {
 	Value string
 }
 
-func (sl *StringLiteral) isExpressionNode(){}
-func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal}
-func (sl *StringLiteral) String() string {return sl.Token.Literal}
-
-
+func (sl *StringLiteral) isExpressionNode()    {}
+func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
+func (sl *StringLiteral) String() string       { return sl.Token.Literal }
 
 type PrefixExpression struct {
 	Token    token.Token // prefix token, e.g. !
@@ -256,7 +254,7 @@ type CallExpression struct {
 	Arguments []Expression
 }
 
-func (ce *CallExpression) isExpressionNode()      {}
+func (ce *CallExpression) isExpressionNode()    {}
 func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
 func (ce *CallExpression) String() string {
 	var out bytes.Buffer
@@ -270,6 +268,28 @@ func (ce *CallExpression) String() string {
 	out.WriteString("(")
 	out.WriteString(strings.Join(args, ","))
 	out.WriteString(")")
+
+	return out.String()
+}
+
+type ArrayLiteral struct {
+	Token    token.Token //  the '[' Token
+	Elements []Expression
+}
+
+func (al *ArrayLiteral) isExpressionNode()    {}
+func (al *ArrayLiteral) TokenLiteral() string { return al.Token.Literal }
+func (al *ArrayLiteral) String() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, el := range al.Elements {
+		elements = append(elements, el.String())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ","))
+	out.WriteString("]")
 
 	return out.String()
 }

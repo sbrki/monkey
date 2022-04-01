@@ -72,7 +72,7 @@ func (l *Lexer) readNumber() string {
 
 func (l *Lexer) readString() string {
 	//TODO(sbrki): support for basic escape sequences:
-	// \t, \n, \', \", \\ 
+	// \t, \n, \', \", \\
 	l.readChar()
 	startPos := l.currPos
 	for l.currChar != '"' && l.currChar != 0 {
@@ -135,6 +135,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LBRACE, l.currChar)
 	case '}':
 		tok = newToken(token.RBRACE, l.currChar)
+	case '[':
+		tok = newToken(token.LBRACKET, l.currChar)
+	case ']':
+		tok = newToken(token.RBRACKET, l.currChar)
 	case '"':
 		tok.Type = token.STRING
 		tok.Literal = l.readString()
