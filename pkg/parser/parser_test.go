@@ -745,6 +745,38 @@ func TestCallExpressionParsing(t *testing.T) {
 	testLiteralExpression(t, callExpr.Arguments[3], "foo")
 }
 
+func TestParsingArrayLiterals(t *testing.T) {
+	input := "[1, 2 * 2, 3 + 3]"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("len(program.Statements) = %d, expected = 1",
+			len(program.Statements))
+	}
+
+	exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+	}
+
+	arrayLit, ok := exprStmt.Expression.(*ast.ArrayLiteral)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Expression to ast.ArrayLiteral. got = %q", exprStmt.Expression)
+	}
+
+	if len(arrayLit.Elements) != 3 {
+		t.Fatalf("len(arrayLit.Elements) != 3, got = %d", len(arrayLit.Elements))
+	}
+
+	testIntegerLiteral(t, arrayLit.Elements[0], 1)
+	testInfixExpression(t, arrayLit.Elements[1], 2, "*", 2)
+	testInfixExpression(t, arrayLit.Elements[2], 3, "+", 3)
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {
