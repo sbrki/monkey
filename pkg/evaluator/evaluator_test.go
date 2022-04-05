@@ -403,7 +403,7 @@ func TestArrayIndexExpressions(t *testing.T) {
 			3,
 		},
 		{
-			"let myArray = [1,2,3]; myarray[2];",
+			"let myArray = [1,2,3]; myArray[2];",
 			3,
 		},
 		{
