@@ -335,6 +335,20 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`len("hello world")`, 11},
 		{`len(1)`, "argument to `len` not supported, got=INTEGER"},
 		{`len("one", "two")`, "wrong number of arguments. got=2, want=1"},
+		{`len([])`, 0},
+		{`len([0])`, 1},
+		{`len([0,1])`, 2},
+		{`first([])`, nil},
+		{`first([5])`, 5},
+		{`first([5,10])`, 5},
+		{`first("string")`, "argument to `first` must be array, got STRING"},
+		{`first(1,2)`, "wrong number of arguments. got=2, want=1"},
+		{`last([])`, nil},
+		{`last([5])`, 5},
+		{`last([5,10])`, 10},
+		{`last("string")`, "argument to `last` must be array, got STRING"},
+		{`last(1,2)`, "wrong number of arguments. got=2, want=1"},
+		// TODO(sbrki): tests for rest, push array builtins
 	}
 
 	for _, tt := range tests {
@@ -343,6 +357,8 @@ func TestBuiltinFunctions(t *testing.T) {
 		switch expected := tt.expected.(type) {
 		case int:
 			testIntegerObject(t, evaluated, int64(expected))
+		case nil:
+			testNullObject(t, evaluated)
 		case string:
 			errObj, ok := evaluated.(*object.Error)
 			if !ok {
