@@ -818,6 +818,135 @@ func TestParsingIndexExpression(t *testing.T) {
 
 }
 
+func TestParsingHashLiteralStringKeys(t *testing.T) {
+	input := `{"one": 1, "two": 2, "three": 3}`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("len(program.Statements) = %d, expected = 1",
+			len(program.Statements))
+	}
+
+	exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+	}
+
+	hashLiteral, ok := exprStmt.Expression.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Expression to ast.HashLiteral. got = %q", exprStmt.Expression)
+	}
+
+	if len(hashLiteral.Pairs) != 3 {
+		t.Errorf("hash.Pairs has wrong length, got=%d, want=3", len(hashLiteral.Pairs))
+	}
+
+	expected := map[string]int64{
+		"one":   1,
+		"two":   2,
+		"three": 3,
+	}
+
+	for key, value := range hashLiteral.Pairs {
+		literal, ok := key.(*ast.StringLiteral)
+		if !ok {
+			t.Errorf("key is not ast.StringLiteral, got=%T", key)
+		}
+
+		expectedValue := expected[literal.String()]
+		testIntegerLiteral(t, value, expectedValue)
+	}
+}
+
+func TestParsingEmptyHashLiteral(t *testing.T) {
+	input := "{}"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("len(program.Statements) = %d, expected = 1",
+			len(program.Statements))
+	}
+
+	exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+	}
+
+	hashLiteral, ok := exprStmt.Expression.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Expression to ast.HashLiteral. got = %q", exprStmt.Expression)
+	}
+
+	if len(hashLiteral.Pairs) != 0 {
+		t.Errorf("hash.Pairs has wrong length, got=%d, want=0", len(hashLiteral.Pairs))
+	}
+}
+
+func TestParsingHashLiteralsWithExpressions(t *testing.T) {
+	input := `{"one": 0 + 1, "two": 10 - 8, "three": 15/5 }`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("len(program.Statements) = %d, expected = 1",
+			len(program.Statements))
+	}
+
+	exprStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Statement to ast.ExpressionStatement. got = %q", program.Statements[0])
+	}
+
+	hashLiteral, ok := exprStmt.Expression.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("Could not downcast ast.Expression to ast.HashLiteral. got = %q", exprStmt.Expression)
+	}
+
+	if len(hashLiteral.Pairs) != 3 {
+		t.Errorf("hash.Pairs has wrong length, got=%d, want=3", len(hashLiteral.Pairs))
+	}
+
+	tests := map[string]func(ast.Expression){
+		"one": func(e ast.Expression) {
+			testInfixExpression(t, e, 0, "+", 1)
+		},
+		"two": func(e ast.Expression) {
+			testInfixExpression(t, e, 10, "-", 8)
+		},
+		"three": func(e ast.Expression) {
+			testInfixExpression(t, e, 15, "/", 5)
+		},
+	}
+
+	for key, value := range hashLiteral.Pairs {
+		literal, ok := key.(*ast.StringLiteral)
+		if !ok {
+			t.Errorf("key is not ast.StringLiteral, got=%T", key)
+			continue
+		}
+
+		testFunc, ok := tests[literal.String()]
+		if !ok {
+			t.Errorf("No test function for key %q found", literal.String())
+			continue
+		}
+
+		testFunc(value)
+	}
+
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {
