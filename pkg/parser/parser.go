@@ -446,7 +446,6 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 		if !p.peekTokenIs(token.RBRACE) && !p.expectPeek(token.COMMA) {
 			return nil
 		}
-
 	}
 
 	if !p.expectPeek(token.RBRACE) {
