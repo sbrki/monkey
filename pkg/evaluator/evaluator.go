@@ -355,7 +355,12 @@ func unwrapReturnValue(obj object.Object) object.Object {
 }
 
 func evalIndexExpression(left, index object.Object) object.Object {
-	arrayObject := left.(*object.Array)
+	arrayObject, ok := left.(*object.Array)
+
+	if !ok {
+		return newError("index operator not supported: %s", left.Type())
+	}
+
 	idx := index.(*object.Integer).Value
 	max := int64(len(arrayObject.Elements) - 1)
 
