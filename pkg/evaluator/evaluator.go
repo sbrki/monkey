@@ -355,11 +355,19 @@ func unwrapReturnValue(obj object.Object) object.Object {
 }
 
 func evalIndexExpression(left, index object.Object) object.Object {
-	arrayObject, ok := left.(*object.Array)
-
-	if !ok {
+	switch {
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		return evalArrayIndexExpression(left, index)
+	case left.Type() == object.HASH_OBJ:
+		return evalHashIndexExpression(left, index)
+	default:
 		return newError("index operator not supported: %s", left.Type())
 	}
+
+}
+
+func evalArrayIndexExpression(left, index object.Object) object.Object {
+	arrayObject := left.(*object.Array)
 
 	idx := index.(*object.Integer).Value
 	max := int64(len(arrayObject.Elements) - 1)
@@ -369,6 +377,22 @@ func evalIndexExpression(left, index object.Object) object.Object {
 	}
 
 	return arrayObject.Elements[idx]
+}
+
+func evalHashIndexExpression(left, index object.Object) object.Object {
+	hashObject := left.(*object.Hash)
+
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return newError("unusable as hash key: %s", index.Type())
+	}
+
+	pair, ok := hashObject.Pairs[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+
+	return pair.Value
 }
 
 func evalHashLiteral(
